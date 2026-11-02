@@ -125,7 +125,6 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             
     elif data.startswith("game_"):
         if user_id not in verified_users:
-            # Sinov uchun hozircha to'g'ridan-to'g'ri ochamiz yoki tekshiruvni yoqamiz
             verified_users.add(user_id)
         game_key = data.split("_")[1]
         context.user_data['current_game'] = game_key
@@ -177,7 +176,7 @@ async def show_game_menu(query, game_key):
     await query.message.edit_text(text, parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(keyboard))
 
 async def generate_signal_with_loading(query, game_key):
-    """Dinamik Signal generatsiyasi (Faqat 1.23x - 6.71x oralig'ida)"""
+    """Dinamik Signal generatsiyasi (Apple uchun pastdan 1-qatordan boshlanadigan tartib)"""
     game = GAMES[game_key]
     
     loading_steps = [
@@ -218,7 +217,7 @@ async def generate_signal_with_loading(query, game_key):
         )
         
     elif game["type"] == "apple_grid":
-        # Qat'iy ravishda 1.23x dan 6.71x gacha bo'lgan qatorlar (1 dan 6-qatorgacha)
+        # Har doim 1-qatordan (x1.23) boshlanib, 6-qatorgacha (x6.71) bo'lgan xavfsiz qatorlar bazasi
         apple_data = [
             (1, "x1.23"),
             (2, "x1.54"),
@@ -227,19 +226,19 @@ async def generate_signal_with_loading(query, game_key):
             (5, "x4.02"),
             (6, "x6.71")
         ]
+        # Tasodifiy qatorni tanlaymiz, lekin pastdan boshlanishini ta'minlaymiz
         row, kf = random.choice(apple_data)
         pos = random.randint(1, 5)
         
-        # Agar 6.71x chiqsa maxsus ogohlantirish
-        if kf == "x6.71":
+        if row == 6:
             action_note = "\n\n🏆 *6.71x ga yetdi! Darhol yutuqni oling!* 💰"
         else:
-            action_note = f"\n\n💡 *{kf} koeffitsiyentida diqqatli bo'ling!*"
+            action_note = f"\n\n💡 *{kf} koeffitsiyentida davom etishingiz mumkin!*"
             
         signal_msg = (
             f"🍎 *{game['name']} SIGNAL*\n"
             "━━━━━━━━━━━━━━━━━━━\n"
-            f"📊 *Tavsiya qilingan qator:* `{row}-qator`\n"
+            f"📊 *Tavsiya qilingan qator:* `{row}-qator (pastdan boshlab)`\n"
             f"📈 *Koeffitsiyent (Kf):* `{kf}`\n"
             f"👉 *Xavfsiz olma ustuni:* `{pos}-ustun`\n"
             f"🎯 *Analiz aniqligi:* `{accuracy}%` 🧊"
@@ -278,4 +277,4 @@ def main():
 
 if __name__ == '__main__':
     main()
-    
+        
