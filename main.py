@@ -21,8 +21,6 @@ GAMES = {
     "penalty": {"name": "⚽ Penalty Shootout", "type": "direction"}
 }
 
-# Foydalanuvchilar tasdiqlanganini saqlash uchun vaqtinchalik baza (xotira)
-# Real loyihada buni bazaga ulash mumkin, hozircha oddiy dictionary
 verified_users = set()
 waiting_for_verification = set()
 
@@ -31,11 +29,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     user_id = user.id
     
-    # Agar foydalanuvchi allaqachon shartni bajargan bo'lsa
     if user_id in verified_users:
         await show_main_menu(update, context)
     else:
-        # Shartni bajarish talabi
         welcome_text = (
             f"❄️ *Salom, {user.first_name}!* \n"
             "🧊 *MUZZ | Coldbet Signal Pro* botiga xush kelibsiz!\n\n"
@@ -116,7 +112,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"🆔 ID: `{user_id}`\n"
             f"🧊 Promokod: `MUZZ` (Faol)\n"
             f"🛡 Holati: *Tasdiqlangan ✅*\n"
-            f"🎁 Bonuslar: Faol ($2000 + 150 ta tekin aylantirish)[span_3](start_span)[span_3](end_span)"
+            f"🎁 Bonuslar: Faol ($2000 + 150 ta tekin aylantirish)[span_0](start_span)[span_0](end_span)"
         )
         keyboard = [[InlineKeyboardButton("🔙 Orqaga", callback_data="main_menu")]]
         await query.message.edit_text(profile_text, parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(keyboard))
@@ -142,11 +138,10 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await generate_signal_with_loading(query, game_key)
 
 async def handle_user_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Foydalanuvchi ID yoki Skrinshot yuborganda uni qabul qilish"""
+    """Foydalanuvchi ID yoki Skrinshot yuborganda qabul qilish"""
     user_id = update.effective_user.id
     
     if user_id in waiting_for_verification:
-        # Foydalanuvchi ID yoki rasm yubordi, uni tasdiqlangan deb belgilaymiz
         waiting_for_verification.remove(user_id)
         verified_users.add(user_id)
         
@@ -167,7 +162,6 @@ async def handle_user_message(update: Update, context: ContextTypes.DEFAULT_TYPE
         ]
         await update.message.reply_text(success_text, parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(keyboard))
     else:
-        # Agar shart so'ralmagan bo'lsa
         if user_id in verified_users:
             await update.message.reply_text("Iltimos, quyidagi tugmalar orqali o'yinni tanlang 👇")
         else:
@@ -229,14 +223,33 @@ async def generate_signal_with_loading(query, game_key):
         )
         
     elif game["type"] == "apple_grid":
-        row = random.randint(3, 7)
+        # Faqat 1.23x dan 6.71x gacha bo'lgan qatorlar (1 dan 6-qatorgacha)
+        apple_data = [
+            (1, "x1.23"),
+            (2, "x1.54"),
+            (3, "x1.93"),
+            (4, "x2.41"),
+            (5, "x4.02"),
+            (6, "x6.71")
+        ]
+        row, kf = random.choice(apple_data)
         pos = random.randint(1, 5)
+        
+        # Maxsus ogohlantirish qo'shamiz
+        action_note = ""
+        if kf == "x6.71":
+            action_note = "\n\n🏆 *6.71x ga yetdi! Darhol yutuqni oling!* 💰"
+        else:
+            action_note = f"\n\n💡 *{kf} koeffitsiyentida diqqatli bo'ling!*"
+            
         signal_msg = (
             f"🍎 *{game['name']} SIGNAL*\n"
             "━━━━━━━━━━━━━━━━━━━\n"
             f"📊 *Tavsiya qilingan qator:* `{row}-qator`\n"
+            f"📈 *Koeffitsiyent (Kf):* `{kf}`\n"
             f"👉 *Xavfsiz olma ustuni:* `{pos}-ustun`\n"
-            f"🎯 *Analiz aniqligi:* `{accuracy}%` 🧊\n"
+            f"🎯 *Analiz aniqligi:* `{accuracy}%` 🧊"
+            f"{action_note}\n"
             "━━━━━━━━━━━━━━━━━━━"
         )
         
@@ -271,4 +284,4 @@ def main():
 
 if __name__ == '__main__':
     main()
-    
+        
