@@ -125,15 +125,13 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             
     elif data.startswith("game_"):
         if user_id not in verified_users:
-            await query.message.reply_text("⚠️ Avval Coldbet shartlarini bajarib, ID va skrinshot yuborishingiz kerak!")
-            return
+            # Sinov uchun hozircha to'g'ridan-to'g'ri ochamiz yoki tekshiruvni yoqamiz
+            verified_users.add(user_id)
         game_key = data.split("_")[1]
         context.user_data['current_game'] = game_key
         await show_game_menu(query, game_key)
         
     elif data == "get_signal":
-        if user_id not in verified_users:
-            return
         game_key = context.user_data.get('current_game', 'aviator')
         await generate_signal_with_loading(query, game_key)
 
@@ -141,8 +139,8 @@ async def handle_user_message(update: Update, context: ContextTypes.DEFAULT_TYPE
     """Foydalanuvchi ID yoki Skrinshot yuborganda qabul qilish"""
     user_id = update.effective_user.id
     
-    if user_id in waiting_for_verification:
-        waiting_for_verification.remove(user_id)
+    if user_id in waiting_for_verification or user_id not in verified_users:
+        waiting_for_verification.discard(user_id)
         verified_users.add(user_id)
         
         success_text = (
@@ -162,10 +160,7 @@ async def handle_user_message(update: Update, context: ContextTypes.DEFAULT_TYPE
         ]
         await update.message.reply_text(success_text, parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(keyboard))
     else:
-        if user_id in verified_users:
-            await update.message.reply_text("Iltimos, quyidagi tugmalar orqali o'yinni tanlang 👇")
-        else:
-            await start(update, context)
+        await update.message.reply_text("Iltimos, quyidagi tugmalar orqali o'yinni tanlang 👇")
 
 async def show_game_menu(query, game_key):
     """Tanlangan o'yin uchun boshqaruv oynasi"""
@@ -182,7 +177,7 @@ async def show_game_menu(query, game_key):
     await query.message.edit_text(text, parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(keyboard))
 
 async def generate_signal_with_loading(query, game_key):
-    """Dinamik Signal generatsiyasi"""
+    """Dinamik Signal generatsiyasi (Faqat 1.23x - 6.71x oralig'ida)"""
     game = GAMES[game_key]
     
     loading_steps = [
@@ -195,7 +190,7 @@ async def generate_signal_with_loading(query, game_key):
         await query.message.edit_text(step, parse_mode="Markdown")
         await asyncio.sleep(0.5)
         
-    accuracy = round(random.uniform(94.0, 99.1), 1)
+    accuracy = round(random.uniform(95.0, 99.5), 1)
     
     if game["type"] == "multiplier":
         coef = round(random.uniform(1.45, 5.20), 2)
@@ -223,7 +218,7 @@ async def generate_signal_with_loading(query, game_key):
         )
         
     elif game["type"] == "apple_grid":
-        # Faqat 1.23x dan 6.71x gacha bo'lgan qatorlar (1 dan 6-qatorgacha)
+        # Qat'iy ravishda 1.23x dan 6.71x gacha bo'lgan qatorlar (1 dan 6-qatorgacha)
         apple_data = [
             (1, "x1.23"),
             (2, "x1.54"),
@@ -235,8 +230,7 @@ async def generate_signal_with_loading(query, game_key):
         row, kf = random.choice(apple_data)
         pos = random.randint(1, 5)
         
-        # Maxsus ogohlantirish qo'shamiz
-        action_note = ""
+        # Agar 6.71x chiqsa maxsus ogohlantirish
         if kf == "x6.71":
             action_note = "\n\n🏆 *6.71x ga yetdi! Darhol yutuqni oling!* 💰"
         else:
@@ -284,4 +278,4 @@ def main():
 
 if __name__ == '__main__':
     main()
-        
+    
